@@ -1,657 +1,132 @@
 {
-  "name": "study planner",
+  "name": "study planner final",
   "nodes": [
     {
       "parameters": {
-        "options": {
-          "responseMode": "responseNodes"
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
-      "typeVersion": 1.4,
-      "position": [
-        -688,
-        240
-      ],
-      "id": "5e40789d-530c-46e2-9d22-1dd9715e3a6b",
-      "name": "When chat message received",
-      "webhookId": "2dc6f868-c1f3-4bc1-a0e7-d635b344bba1",
-      "notesInFlow": false
-    },
-    {
-      "parameters": {
-        "modelName": "models/gemini-3.1-flash-lite",
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
-      "typeVersion": 1.1,
-      "position": [
-        656,
-        368
-      ],
-      "id": "11f1adff-88c0-40c1-ad60-5ed971e19d14",
-      "name": "Google Gemini Chat Model",
-      "credentials": {
-        "googlePalmApi": {
-          "id": "wUtxsLVA6hLqfJzJ",
-          "name": "Google Gemini(PaLM) Api account"
-        }
-      },
-      "notes": "You are an intelligent AI Study Planner.\n\nYour task is to create a realistic, personalized study schedule based on the user's goals and constraints.\n\nToday's date is {{ $now.toISODate() }}.\n\n## User Information\nThe user may provide:\n- Exam name\n- Exam date\n- Subjects\n- Weak subjects\n- Strong subjects\n- Daily study hours\n- Preferred study timings\n- Number of study days\n- Any additional preferences\n\nIf some information is missing, make reasonable assumptions instead of asking follow-up questions.\n\n## Planning Rules\n\n1. Start planning from today's date unless the user specifies another start date.\n2. Never generate dates in the past.\n3. Prioritize weak subjects.\n4. Allocate more time to difficult subjects.\n5. Balance study and revision sessions.\n6. Keep individual sessions between 30 and 180 minutes.\n7. Include a 15-minute break after every 90 minutes of study.\n8. Avoid overlapping study sessions.\n9. Respect the user's available study hours.\n10. Generate a realistic schedule.\n11. Use ISO date format: YYYY-MM-DD.\n12. Use 24-hour time format (HH:mm).\n13. Ensure the end time is always later than the start time on the same day.\n14. Do not create study sessions that extend past 23:59.\n15. If the user does not specify an exam date, create a 7-day study plan starting from today.\n\n## Output Rules\n\nReturn ONLY valid JSON.\n\nDo NOT include:\n- Markdown\n- Code fences\n- Explanations\n- Introductory text\n- Bullet points\n\nThe response must exactly follow this structure:\n\n{\n  \"output\": {\n    \"study_plan\": [\n      {\n        \"subject\": \"Financial Statement Analysis\",\n        \"topic\": \"Revenue Recognition\",\n        \"date\": \"2026-07-25\",\n        \"start_time\": \"18:00\",\n        \"end_time\": \"20:00\",\n        \"duration_minutes\": 120,\n        \"priority\": \"High\",\n        \"task_type\": \"Study\",\n        \"status\": \"Pending\",\n        \"notes\": \"Practice 20 questions on Revenue Recognition.\"\n      }\n    ]\n  }\n}\n\nRequirements:\n- duration_minutes must be an integer.\n- status must always be \"Pending\".\n- priority must be one of: High, Medium, Low.\n- task_type must be one of: Study, Revision, Practice, Mock Test.\n- The first character of the response must be {\n- The last character of the response must be }\n- Return only the JSON object and nothing else."
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "You are an expert AI Study Planner.\n\nYour job is to generate a realistic and personalized study plan based on the user's request.\n\nThe study plan should be practical, balanced, and achievable.\n\nInstructions:\n\n- Understand the user's goal, exam, subjects, available study hours, deadlines, and preferences.\n- Break the syllabus into manageable study sessions.\n- Each study session should focus on one topic only.\n- Create sessions between 30 and 240 minutes unless the user specifies otherwise.\n- Distribute study sessions realistically across the requested dates.\n- Prioritize weaker subjects if the user mentions them.\n- Include revision sessions when appropriate.\n- Include practice/problem-solving sessions where relevant.\n- Avoid overlapping study sessions on the same day.\n- Keep start_time earlier than end_time.\n- Use 24-hour time format (HH:MM).\n- Use dates in YYYY-MM-DD format.\n- Calculate duration_minutes correctly.\n- Set status to \"Pending\".\n- Keep notes short and useful.\n\nGenerate a unique ID for every study session.\n\nThe ID format must be:\n\nST-XXXXXXXX\n\nwhere XXXXXXXX is a unique random or timestamp-based identifier.\n\nReturn ONLY valid JSON.\n\nDo NOT use markdown.\n\nDo NOT explain your answer.\n\nOutput format:\n\n{\n  \"output\": {\n    \"planId\": \"\",\n    \"examName\": \"\",\n    \"startDate\": \"\",\n    \"examDate\": \"\",\n    \"createdAt\": \"\",\n    \"study_plan\": [\n      {\n        \"id\": \"\",\n        \"subject\": \"\",\n        \"topic\": \"\",\n        \"date\": \"\",\n        \"start_time\": \"\",\n        \"end_time\": \"\",\n        \"duration_minutes\": 0,\n        \"priority\": \"\",\n        \"task_type\": \"\",\n        \"status\": \"\",\n        \"notes\": \"\"\n      }\n    ]\n  }\n}\nBefore the study_plan array, generate plan-level metadata.\n\nInclude:\n\n- planId (format: PLAN-XXXXXXXX)\n- examName\n- startDate\n- examDate\n- createdAt (current date in YYYY-MM-DD format)\n\nThe final JSON must follow this structure exactly.",
-        "hasOutputParser": true,
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 3.1,
-      "position": [
-        672,
-        240
-      ],
-      "id": "4db5e776-9031-465a-b3c2-d4f7481ef70a",
-      "name": "AI Agent",
-      "alwaysOutputData": false,
-      "retryOnFail": true
-    },
-    {
-      "parameters": {
-        "operation": "append",
-        "documentId": {
-          "__rl": true,
-          "value": "1sfv_rZRcsNz0SNRRo4Q4r21JPDSuuc-ijeXZhL9EX6Q",
-          "mode": "list",
-          "cachedResultName": "AI STUDY PLANNER",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sfv_rZRcsNz0SNRRo4Q4r21JPDSuuc-ijeXZhL9EX6Q/edit?usp=drivesdk"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": 1928948108,
-          "mode": "list",
-          "cachedResultName": "Sessions",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sfv_rZRcsNz0SNRRo4Q4r21JPDSuuc-ijeXZhL9EX6Q/edit#gid=1928948108"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "PlanID": "={{ $json.id }}",
-            "SessionID": "=",
-            "Topic": "={{ $json.topic }}",
-            "Subject": "={{ $json.subject }}",
-            "EndTime": "={{ $json.end_time }}",
-            "StartTime": "={{ $json.start_time }}",
-            "Date": "={{ $json.date }}",
-            "Priority": "={{ $json.priority }}",
-            "Status": "={{ $json.status }}"
-          },
-          "matchingColumns": [],
-          "schema": [
-            {
-              "id": "PlanID",
-              "displayName": "PlanID",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "SessionID",
-              "displayName": "SessionID",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "Date",
-              "displayName": "Date",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "StartTime",
-              "displayName": "StartTime",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "EndTime",
-              "displayName": "EndTime",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "Subject",
-              "displayName": "Subject",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "Topic",
-              "displayName": "Topic",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "Priority",
-              "displayName": "Priority",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "Status",
-              "displayName": "Status",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "CalendarEventID",
-              "displayName": "CalendarEventID",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
-      "position": [
-        1568,
-        352
-      ],
-      "id": "f737fdaa-dac1-43d7-9e96-adffa813b737",
-      "name": "Append row in sheet",
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "nSFCytuez8ODLoS7",
-          "name": "Google Sheets account 2"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsonSchemaExample": "{\n  \"output\": {\n    \"planId\": \"\",\n    \"examName\": \"\",\n    \"startDate\": \"\",\n    \"examDate\": \"\",\n    \"createdAt\": \"\",\n    \"study_plan\": [\n      {\n        \"id\": \"\",\n        \"subject\": \"\",\n        \"topic\": \"\",\n        \"date\": \"\",\n        \"start_time\": \"\",\n        \"end_time\": \"\",\n        \"duration_minutes\": 0,\n        \"priority\": \"\",\n        \"task_type\": \"\",\n        \"status\": \"\",\n        \"notes\": \"\"\n      }\n    ]\n  }\n}"
-      },
-      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
-      "typeVersion": 1.3,
-      "position": [
-        832,
-        368
-      ],
-      "id": "42ac23a8-9b10-4045-b573-57fba8c7f1ea",
-      "name": "Structured Output Parser",
-      "notes": "You are an intelligent AI Study Planner.\n\nYour task is to create a realistic, personalized study schedule based on the user's goals and constraints.\n\nToday's date is {{ $now.toISODate() }}.\n\n## User Information\nThe user may provide:\n- Exam name\n- Exam date\n- Subjects\n- Weak subjects\n- Strong subjects\n- Daily study hours\n- Preferred study timings\n- Number of study days\n- Any additional preferences\n\nIf some information is missing, make reasonable assumptions instead of asking follow-up questions.\n\n## Planning Rules\n\n1. Start planning from today's date unless the user specifies another start date.\n2. Never generate dates in the past.\n3. Prioritize weak subjects.\n4. Allocate more time to difficult subjects.\n5. Balance study and revision sessions.\n6. Keep individual sessions between 30 and 180 minutes.\n7. Include a 15-minute break after every 90 minutes of study.\n8. Avoid overlapping study sessions.\n9. Respect the user's available study hours.\n10. Generate a realistic schedule.\n11. Use ISO date format: YYYY-MM-DD.\n12. Use 24-hour time format (HH:mm).\n13. Ensure the end time is always later than the start time on the same day.\n14. Do not create study sessions that extend past 23:59.\n15. If the user does not specify an exam date, create a 7-day study plan starting from today.\n\n## Output Rules\n\nReturn ONLY valid JSON.\n\nDo NOT include:\n- Markdown\n- Code fences\n- Explanations\n- Introductory text\n- Bullet points\n\nThe response must exactly follow this structure:\n\n{\n  \"output\": {\n    \"study_plan\": [\n      {\n        \"subject\": \"Financial Statement Analysis\",\n        \"topic\": \"Revenue Recognition\",\n        \"date\": \"2026-07-25\",\n        \"start_time\": \"18:00\",\n        \"end_time\": \"20:00\",\n        \"duration_minutes\": 120,\n        \"priority\": \"High\",\n        \"task_type\": \"Study\",\n        \"status\": \"Pending\",\n        \"notes\": \"Practice 20 questions on Revenue Recognition.\"\n      }\n    ]\n  }\n}\n\nRequirements:\n- duration_minutes must be an integer.\n- status must always be \"Pending\".\n- priority must be one of: High, Medium, Low.\n- task_type must be one of: Study, Revision, Practice, Mock Test.\n- The first character of the response must be {\n- The last character of the response must be }\n- Return only the JSON object and nothing else."
-    },
-    {
-      "parameters": {
-        "fieldToSplitOut": "output.study_plan",
-        "options": {
-          "includeBinary": false
-        }
-      },
-      "type": "n8n-nodes-base.splitOut",
-      "typeVersion": 1,
-      "position": [
-        1040,
-        352
-      ],
-      "id": "7469db59-ec67-4abc-94e4-e45cb1e5f7ac",
-      "name": "Split Out",
-      "alwaysOutputData": false
-    },
-    {
-      "parameters": {
-        "calendar": {
-          "__rl": true,
-          "value": "karinapandav1911@gmail.com",
-          "mode": "list",
-          "cachedResultName": "karinapandav1911@gmail.com"
-        },
-        "additionalFields": {
-          "description": "={{ $json.priority }}\n{{ $json.task_type }}\n{{ $json.status }}\n{{ $json.notes }}",
-          "summary": "={{ $json.subject }} - {{ $json.topic }}"
-        }
-      },
-      "type": "n8n-nodes-base.googleCalendar",
-      "typeVersion": 1.3,
-      "position": [
-        1312,
-        224
-      ],
-      "id": "597563a3-e69c-4d74-bde6-d60facdb6bd4",
-      "name": "Create an event",
-      "alwaysOutputData": false,
-      "credentials": {
-        "googleCalendarOAuth2Api": {
-          "id": "BovATaRRRgesahoh",
-          "name": "Google Calendar account"
-        }
-      },
-      "disabled": true
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "={{ $json.chatInput }}",
-        "hasOutputParser": true,
-        "options": {
-          "systemMessage": "You are an Intent Classification Agent for an AI Study Planner.\n\nYour ONLY responsibility is to determine the user's intent.\n\nYou must classify every message into EXACTLY ONE of the following intents:\n\n1. createPlan\nUse when the user wants to create a new study plan or schedule.\n\nExamples:\n- Create a study plan for NLP.\n- Make a timetable for CFA.\n- Schedule AI and DBMS for next week.\n- I want to study DSA every evening.\n- Generate a study schedule.\n\n2. reschedule\nUse when the user wants to modify an existing study plan.\n\nExamples:\n- Move tomorrow's NLP session to Friday.\n- Change today's study time to 7 PM.\n- Increase DSA study to 3 hours.\n- Shift my DBMS revision to Monday.\n- Update my study schedule.\n- Reschedule tomorrow's session.\n\n3. deletePlan\nUse when the user wants to remove or cancel one or more existing study sessions.\n\nExamples:\n- Delete tomorrow's NLP session.\n- Cancel today's study.\n- Remove my CFA revision.\n- Delete all AI sessions this week.\n- I don't want to study DBMS tomorrow.\n\nRules:\n- Return ONLY valid JSON.\n- Do NOT explain your reasoning.\n- Do NOT generate study plans.\n- Do NOT answer the user's question.\n- Always choose exactly one intent.\n\nOutput format:\n\n{\n  \"intent\": \"createPlan\"\n}\n\nor\n\n{\n  \"intent\": \"reschedule\"\n}\n\nor\n\n{\n  \"intent\": \"deletePlan\"\n}"
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 3.1,
-      "position": [
-        -224,
-        240
-      ],
-      "id": "3ef5393c-fa57-4c83-ac8e-107eba84e977",
-      "name": "AI Agent1",
-      "notes": "You are an intent classifier.\n\nYour ONLY job is to classify the user's message into one of these two intents:\n\ncreate_plan\nreschedule\n\nClassification rules:\n\nReturn create_plan if the user wants to:\n- create a study plan\n- generate a timetable\n- make a schedule\n- plan studies\n- prepare a study plan\n- build a learning schedule\n\nReturn reschedule if the user wants to:\n- reschedule a study session\n- move a study session\n- postpone a study session\n- change the date of a study session\n- change the time of a study session\n- shift a study session\n- update an existing study plan\n- modify an existing study plan\n- I missed my study session\n- I couldn't study yesterday\n- I was busy today\n- move my FSA session\n- move today's session\n- postpone today's study\n\nRules:\n- Return ONLY one word.\n- Output must be exactly:\ncreate_plan\nor\nreschedule\n- Do not explain.\n- Do not use JSON.\n- Do not greet the user."
-    },
-    {
-      "parameters": {
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
-      "typeVersion": 1.1,
-      "position": [
-        -224,
-        432
-      ],
-      "id": "4919e9bf-2dbf-4046-94f6-959f0d1acc4e",
-      "name": "Google Gemini Chat Model1",
-      "credentials": {
-        "googlePalmApi": {
-          "id": "wUtxsLVA6hLqfJzJ",
-          "name": "Google Gemini(PaLM) Api account"
-        }
-      },
-      "notes": "You are an intent classification assistant for an AI Study Planner.\n\nYour job is to classify the user's request into exactly one of the following intents:\n\n1. create_plan\n2. reschedule\n\nRules:\n\n- If the user wants to create a new study plan, return:\ncreate_plan\n\nExamples:\n- Create a study plan for CFA Level 1\n- Plan my studies for this week\n- Make me a timetable\n- Generate a study schedule\n\n- If the user wants to modify, postpone, move, or reschedule an existing study plan, return:\nreschedule\n\nExamples:\n- I missed yesterday's study session\n- Move my FSA session to Friday\n- Shift today's study to tomorrow\n- Reschedule my timetable\n\nReturn ONLY one word.\n\nDo not explain.\nDo not use markdown.\nDo not return JSON."
-    },
-    {
-      "parameters": {
-        "rules": {
+        "formTitle": "AI Study Planner",
+        "formDescription": "Create a personalized study plan based on your subjects, available time and exam goals.",
+        "formFields": {
           "values": [
             {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "leftValue": "={{ $json.output }}",
-                    "rightValue": "reschedule",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    },
-                    "id": "d216e716-af63-4c23-99fe-983c9678179d"
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": "={{ $json.output }}"
+              "fieldLabel": "Name",
+              "requiredField": true
             },
             {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "id": "974fbb1d-b684-4c76-a87a-6bc669174980",
-                    "leftValue": "={{ $json.output }}",
-                    "rightValue": "createPlan",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "={{ $json.output }}"
+              "fieldLabel": "What subjects/topics do you need to study?",
+              "fieldType": "textarea",
+              "placeholder": "Example: DSA, SQL, Python, Machine Learning",
+              "requiredField": true
             },
             {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
+              "fieldLabel": "Exam Date",
+              "fieldType": "date",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "How many hours can you study per day?",
+              "fieldType": "number",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Current level",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
                   {
-                    "id": "d623f01b-3d5f-4d82-bba7-81122c5c49e9",
-                    "leftValue": "={{ $json.output }}",
-                    "rightValue": "deletePlan",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals",
-                      "name": "filter.operator.equals"
-                    }
+                    "option": "Beginner"
+                  },
+                  {
+                    "option": "Intermediate"
+                  },
+                  {
+                    "option": "Advanced"
                   }
-                ],
-                "combinator": "and"
+                ]
               },
-              "renameOutput": true,
-              "outputKey": "={{ $json.output }}"
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Weak Topics",
+              "fieldType": "textarea",
+              "placeholder": "Example: Dynamic Programming, SQL joins, probability"
+            },
+            {
+              "fieldLabel": "Which topics have you already completed?",
+              "fieldType": "textarea"
+            },
+            {
+              "fieldLabel": "Study Preference",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Theory + Practice"
+                  },
+                  {
+                    "option": "Mostly Practice"
+                  },
+                  {
+                    "option": "Balanced"
+                  }
+                ]
+              },
+              "requiredField": true
             }
           ]
         },
-        "options": {
-          "allMatchingOutputs": false
-        }
-      },
-      "type": "n8n-nodes-base.switch",
-      "typeVersion": 3.4,
-      "position": [
-        128,
-        224
-      ],
-      "id": "f1c4d3da-168e-494c-be3b-3862c526c3f9",
-      "name": "Switch",
-      "alwaysOutputData": false
-    },
-    {
-      "parameters": {
-        "documentId": {
-          "__rl": true,
-          "value": "1sfv_rZRcsNz0SNRRo4Q4r21JPDSuuc-ijeXZhL9EX6Q",
-          "mode": "list",
-          "cachedResultName": "AI STUDY PLANNER",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sfv_rZRcsNz0SNRRo4Q4r21JPDSuuc-ijeXZhL9EX6Q/edit?usp=drivesdk"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": 1928948108,
-          "mode": "list",
-          "cachedResultName": "Sessions",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sfv_rZRcsNz0SNRRo4Q4r21JPDSuuc-ijeXZhL9EX6Q/edit#gid=1928948108"
-        },
         "options": {}
       },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
       "position": [
-        320,
-        64
+        0,
+        0
       ],
-      "id": "5fff21a9-00c7-46e7-b50c-b68f2072af5e",
-      "name": "Get row(s) in sheet",
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "nSFCytuez8ODLoS7",
-          "name": "Google Sheets account 2"
-        }
-      }
+      "id": "35785530-1d7b-4f90-8360-261078310857",
+      "name": "On form submission",
+      "webhookId": "942e4a5a-5170-44d7-8fc8-c34795374331"
     },
     {
       "parameters": {
         "promptType": "define",
-        "text": "=User Request:\nReschedule Calculus - Integration study session to tomorrow at 2 PM.\n\nStudy Sessions:\n{{ JSON.stringify($json.data) }}",
-        "hasOutputParser": true,
+        "text": "=The student has provided the following request:\nname - {{ $json.Name }}\nsubjects/topics - {{ $json[\"What subjects/topics do you need to study?\"] }}\nexam date - {{ $json[\"Exam Date\"] }}\nhours - {{ $json[\"How many hours can you study per day?\"] }}\ncurrent lvl - {{ $json[\"Current level\"] }}\nweak topics -{{ $json[\"Weak Topics\"] }}\ncompleted topics- {{ $json[\"Which topics have you already completed?\"] }}\npreference - {{ $json[\"Study Preference\"] }}\n\nUse the available tools and information to understand the request and help the student.\n\nIf the student wants to create a study plan, create a realistic plan based on their requirements.\n\nIf the student wants to reschedule a study session, identify the relevant existing session and make the requested change.\n\nReturn a clear and concise response that the student can directly understand and act upon.",
         "options": {
-          "systemMessage": "You are an AI Study Plan Rescheduler.\n\nYou will receive:\n\n1. The user's rescheduling request.\n2. A JSON array containing all study sessions.\n\nYour task is to:\n\n1. Understand what study session the user wants to reschedule.\n2. Find the SINGLE matching study session.\n3. Determine the updated date and/or time requested by the user.\n4. Return ONLY the information needed to update that session.\n\nRules:\n- Match only ONE study session.\n- If multiple sessions match, choose the closest upcoming one.\n- Keep any field unchanged unless the user explicitly changes it.\n- Preserve the study duration unless the user specifies a new duration.\n- Do NOT create new study sessions.\n- Do NOT modify more than one session.\n- Do NOT explain your reasoning.\n- Do NOT return markdown.\n- Return ONLY valid JSON.\n\nOutput format:\n\n{\n  \"id\": \"\",\n  \"subject\": \"\",\n  \"topic\": \"\",\n  \"old_date\": \"\",\n  \"new_date\": \"\",\n  \"old_start_time\": \"\",\n  \"new_start_time\": \"\",\n  \"old_end_time\": \"\",\n  \"new_end_time\": \"\"\n}\n\nIf no matching study session is found, return:\n\n{\n  \"error\": \"No matching study session found.\"\n}"
+          "systemMessage": "You are an AI Study Planner Agent.\n\nYour job is to help students create realistic, personalized study plans and reschedule existing study sessions.\n\nYou must:\n- Understand the student's goals, subjects, exam date, available study time, current level, completed topics, and weak topics.\n- Create practical schedules that fit within the student's available study time.\n- Prioritize weak and important topics.\n- Balance learning, problem-solving, revision, and breaks.\n- Avoid unrealistic workloads.\n- Respect the student's exam date and available time.\n- When rescheduling a session, identify the correct existing session and change only what the student requested.\n- Keep the response clear, concise, and actionable.\n\nFor study plan requests:\n1. Identify the subjects and topics.\n2. Prioritize topics based on weakness, importance, and exam proximity.\n3. Divide the available time into manageable study sessions.\n4. Include practice and revision.\n5. Reserve additional revision time before the exam.\n6. Do not schedule more study time than the student has available.\n\nFor rescheduling requests:\n1. Understand which session the student wants to change.\n2. Identify the requested new date/time.\n3. Preserve all other session information unless the student explicitly asks to change it.\n4. Return the updated session information clearly.\n\nIf important information is missing, ask the student for the missing information instead of making unreasonable assumptions.\n\nDo not invent exam dates, subjects, study sessions, or other information that was not provided.\n\nKeep responses student-friendly and practical.\n\nTool usage:\n\n- Use Google Sheets when you need to read, create, or update study plans or study sessions.\n- Use Google Calendar when you need to create or update calendar events for study sessions.\n- When creating a study plan, ensure the study sessions stored in Google Sheets match the events created in Google Calendar.\n- When rescheduling a session, update both Google Sheets and the corresponding Google Calendar event.\n- Do not modify existing data unless the student's request requires it."
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        912,
-        -192
-      ],
-      "id": "4d3f0316-1aad-41cb-bbbc-9f9c5f7b9c54",
-      "name": "AI Agent2",
-      "retryOnFail": false
-    },
-    {
-      "parameters": {
-        "jsonSchemaExample": "{\n  \"id\": \"ST-10000002\",\n  \"subject\": \"Mathematics\",\n  \"topic\": \"Calculus - Integration\",\n  \"old_date\": \"2025-05-16\",\n  \"new_date\": \"2025-05-16\",\n  \"old_start_time\": \"09:00\",\n  \"new_start_time\": \"14:00\",\n  \"old_end_time\": \"11:00\",\n  \"new_end_time\": \"16:00\"\n}"
-      },
-      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
-      "typeVersion": 1.3,
-      "position": [
-        1072,
+        208,
         0
       ],
-      "id": "72a47075-6a45-40cc-9b29-0dcae538e1a4",
-      "name": "Structured Output Parser1"
+      "id": "3de70782-d634-4ae5-bc50-1155d25b6c5c",
+      "name": "AI Agent"
     },
     {
       "parameters": {
-        "operation": "update",
-        "documentId": {
-          "__rl": true,
-          "value": "1sfv_rZRcsNz0SNRRo4Q4r21JPDSuuc-ijeXZhL9EX6Q",
-          "mode": "list",
-          "cachedResultName": "AI STUDY PLANNER",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sfv_rZRcsNz0SNRRo4Q4r21JPDSuuc-ijeXZhL9EX6Q/edit?usp=drivesdk"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": 1928948108,
-          "mode": "list",
-          "cachedResultName": "Sessions",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sfv_rZRcsNz0SNRRo4Q4r21JPDSuuc-ijeXZhL9EX6Q/edit#gid=1928948108"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "SessionID": "=",
-            "Subject": "={{ $json.output.subject }}",
-            "Topic": "={{ $json.output.topic }}",
-            "PlanID": "={{ $json.output.id }}",
-            "StartTime": "={{ $json.output.new_start_time }}",
-            "EndTime": "={{ $json.output.new_end_time }}",
-            "Date": "={{ $json.output.new_date }}"
-          },
-          "matchingColumns": [
-            "PlanID"
-          ],
-          "schema": [
-            {
-              "id": "PlanID",
-              "displayName": "PlanID",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "SessionID",
-              "displayName": "SessionID",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "Date",
-              "displayName": "Date",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "StartTime",
-              "displayName": "StartTime",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "EndTime",
-              "displayName": "EndTime",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "Subject",
-              "displayName": "Subject",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "Topic",
-              "displayName": "Topic",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "Priority",
-              "displayName": "Priority",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "Status",
-              "displayName": "Status",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "CalendarEventID",
-              "displayName": "CalendarEventID",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "row_number",
-              "displayName": "row_number",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true,
-              "readOnly": true,
-              "removed": true
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        },
+        "model": "openai/gpt-oss-120b",
         "options": {}
       },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
       "position": [
-        1280,
-        -192
+        192,
+        192
       ],
-      "id": "e8abf4d3-07cf-4180-9547-389ff0b62e4e",
-      "name": "Update row in sheet",
+      "id": "4aa31048-1ad6-46d4-bbe8-be1d5414bcda",
+      "name": "Groq Chat Model",
       "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "nSFCytuez8ODLoS7",
-          "name": "Google Sheets account 2"
+        "groqApi": {
+          "id": "XVd5iWzDOmzUUOLX",
+          "name": "Groq account"
         }
       }
     },
     {
       "parameters": {
-        "aggregate": "=aggregateAllItemData",
-        "fieldsToAggregate": {
-          "fieldToAggregate": [
-            {}
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.aggregate",
-      "typeVersion": 1,
-      "position": [
-        496,
-        -48
-      ],
-      "id": "a605cfdc-0826-4bcf-8e13-eb11a67d5b7b",
-      "name": "Aggregate"
-    },
-    {
-      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Add a new study plan to the Plans sheet.\n\nProvide:\n- plan_id: a unique ID for the study plan\n- exam_name: the name of the exam\n- start_date: the date the study plan begins\n- exam_date: the exam date\n- created_at: the date and time the plan was created\n\nUse this tool only when creating a new study plan.\n\nDo not provide sheet names, spreadsheet names, row objects, or custom JSON objects. The spreadsheet and sheet are already configured.",
         "operation": "append",
         "documentId": {
           "__rl": true,
@@ -670,26 +145,17 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "PlanID": "={{ $json.output.planId }}",
-            "ExamName": "={{ $json.output.examName }}",
-            "StartDate": "={{ $json.output.startDate }}",
-            "ExamDate": "={{ $json.output.examDate }}",
-            "CreatedAt ": "={{ $json.output.createdAt }}"
+            "Plan ID": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Plan_ID', ``, 'string') }}",
+            "Exam Date": "={{ $('On form submission').item.json[\"Exam Date\"] }}",
+            "Created At": "={{ $('On form submission').item.json.submittedAt }}",
+            "Exam Name": "={{ $('On form submission').item.json[\"What subjects/topics do you need to study?\"] }}",
+            "Start Date": "={{ $('On form submission').item.json.submittedAt }}"
           },
           "matchingColumns": [],
           "schema": [
             {
-              "id": "PlanID",
-              "displayName": "PlanID",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "UserID",
-              "displayName": "UserID",
+              "id": "Plan ID",
+              "displayName": "Plan ID",
               "required": false,
               "defaultMatch": false,
               "display": true,
@@ -698,40 +164,44 @@
               "removed": false
             },
             {
-              "id": "ExamName",
-              "displayName": "ExamName",
+              "id": "Exam Name",
+              "displayName": "Exam Name",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
-              "id": "StartDate",
-              "displayName": "StartDate",
+              "id": "Start Date",
+              "displayName": "Start Date",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
-              "id": "ExamDate",
-              "displayName": "ExamDate",
+              "id": "Exam Date",
+              "displayName": "Exam Date",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
-              "id": "CreatedAt ",
-              "displayName": "CreatedAt ",
+              "id": "Created At",
+              "displayName": "Created At",
               "required": false,
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true
+              "canBeUsedToMatch": true,
+              "removed": false
             }
           ],
           "attemptToConvertTypes": false,
@@ -739,574 +209,52 @@
         },
         "options": {}
       },
-      "type": "n8n-nodes-base.googleSheets",
+      "type": "n8n-nodes-base.googleSheetsTool",
       "typeVersion": 4.7,
       "position": [
-        1040,
-        176
+        384,
+        208
       ],
-      "id": "4cfea9a4-f6d9-47a2-837d-664365f7cb40",
-      "name": "Append row in sheet1",
+      "id": "941414f5-911b-4a59-9a99-a3e4786e57de",
+      "name": "Append row in sheet in Google Sheets",
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "nSFCytuez8ODLoS7",
-          "name": "Google Sheets account 2"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "model": "openai/gpt-oss-safeguard-20b",
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
-      "typeVersion": 1,
-      "position": [
-        912,
-        0
-      ],
-      "id": "d7e9a404-dab2-42c3-bb88-5aa85a9732c1",
-      "name": "Groq Chat Model",
-      "credentials": {
-        "groqApi": {
-          "id": "XVd5iWzDOmzUUOLX",
-          "name": "Groq account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "mode": "combine",
-        "combineBy": "combineByPosition",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        704,
-        -48
-      ],
-      "id": "df46f015-cfba-4002-8665-b306b633bf07",
-      "name": "Merge"
-    },
-    {
-      "parameters": {
-        "jsonSchemaExample": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"intent\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"createPlan\",\n        \"reschedule\",\n        \"deletePlan\"\n      ]\n    }\n  },\n  \"required\": [\n    \"intent\"\n  ]\n}"
-      },
-      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
-      "typeVersion": 1.3,
-      "position": [
-        -80,
-        416
-      ],
-      "id": "aeeb3e4a-92fe-4e17-9a6f-50d734f948b2",
-      "name": "Structured Output Parser2"
-    },
-    {
-      "parameters": {
-        "documentId": {
-          "__rl": true,
-          "value": "1sfv_rZRcsNz0SNRRo4Q4r21JPDSuuc-ijeXZhL9EX6Q",
-          "mode": "list",
-          "cachedResultName": "AI STUDY PLANNER",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sfv_rZRcsNz0SNRRo4Q4r21JPDSuuc-ijeXZhL9EX6Q/edit?usp=drivesdk"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": 1928948108,
-          "mode": "list",
-          "cachedResultName": "Sessions",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sfv_rZRcsNz0SNRRo4Q4r21JPDSuuc-ijeXZhL9EX6Q/edit#gid=1928948108"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
-      "position": [
-        304,
-        432
-      ],
-      "id": "c87b2ffa-f788-46fd-8f22-08b9540d62ea",
-      "name": "Get row(s) in sheet1",
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "nSFCytuez8ODLoS7",
-          "name": "Google Sheets account 2"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "fieldsToAggregate": {
-          "fieldToAggregate": [
-            {}
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.aggregate",
-      "typeVersion": 1,
-      "position": [
-        544,
-        544
-      ],
-      "id": "2f0fe5d1-d741-416c-9f73-bf11543f8225",
-      "name": "Aggregate1"
-    },
-    {
-      "parameters": {},
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        752,
-        560
-      ],
-      "id": "012337c1-c2c3-44cd-8544-7572ec1012f2",
-      "name": "Merge1"
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "You are an AI assistant responsible for identifying study sessions to delete.\n\nYou will receive:\n1. The user's deletion request.\n2. The existing study schedule.\n\nYour task is to:\n- Find the study session(s) that match the user's request.\n- Return ONLY valid JSON.\n- Do not explain your reasoning.\n- Do not modify the schedule.\n\nIf no matching session exists, return:\n\n{\n  \"found\": false\n}\n\nIf a matching session exists, return:\n\n{\n  \"found\": true,\n  \"rowNumber\": <row number>,\n  \"eventId\": \"<calendar event id>\"\n}",
-        "hasOutputParser": true,
-        "options": {
-          "systemMessage": "You are an AI assistant responsible for identifying study sessions to delete.\n\nYou will receive:\n1. The user's deletion request.\n2. The existing study schedule.\n\nYour task is to:\n- Find the study session(s) that match the user's request.\n- Return ONLY valid JSON.\n- Do not explain your reasoning.\n- Do not modify the schedule.\n\nIf no matching session exists, return:\n\n{\n  \"found\": false\n}\n\nIf a matching session exists, return:\n\n{\n  \"found\": true,\n  \"rowNumber\": <row number>,\n  \"eventId\": \"<calendar event id>\"\n}"
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 3.1,
-      "position": [
-        976,
-        560
-      ],
-      "id": "44841ba7-8f57-4dcd-abf1-dde530a4d3f6",
-      "name": "AI Agent3"
-    },
-    {
-      "parameters": {
-        "jsonSchemaExample": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"found\": {\n      \"type\": \"boolean\"\n    },\n    \"rowNumber\": {\n      \"type\": \"number\"\n    },\n    \"eventId\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"found\"\n  ]\n}"
-      },
-      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
-      "typeVersion": 1.3,
-      "position": [
-        1136,
-        752
-      ],
-      "id": "af05bee5-050d-4567-b613-3646dd2e0ca8",
-      "name": "Structured Output Parser3"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "ee570810-6d32-4110-afa3-a944c0ec892a",
-              "leftValue": "",
-              "rightValue": "True",
-              "operator": {
-                "type": "string",
-                "operation": "equals",
-                "name": "filter.operator.equals"
-              }
-            },
-            {
-              "id": "7e799580-e651-4a7d-a411-99d629f77fd6",
-              "leftValue": "",
-              "rightValue": "False",
-              "operator": {
-                "type": "string",
-                "operation": "equals",
-                "name": "filter.operator.equals"
-              }
-            }
-          ],
-          "combinator": "or"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        1312,
-        560
-      ],
-      "id": "e72c2af2-16ae-493e-a606-c242cc3dd41c",
-      "name": "If"
-    },
-    {
-      "parameters": {
-        "operation": "delete",
-        "calendar": {
-          "__rl": true,
-          "mode": "list",
-          "value": ""
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.googleCalendar",
-      "typeVersion": 1.3,
-      "position": [
-        1520,
-        640
-      ],
-      "id": "f5379a4f-da61-439a-a40a-083b377afd6a",
-      "name": "Delete an event",
-      "credentials": {
-        "googleCalendarOAuth2Api": {
-          "id": "BovATaRRRgesahoh",
-          "name": "Google Calendar account"
-        }
-      },
-      "disabled": true
-    },
-    {
-      "parameters": {
-        "operation": "delete",
-        "documentId": {
-          "__rl": true,
-          "mode": "list",
-          "value": ""
-        },
-        "sheetName": {
-          "__rl": true,
-          "mode": "list",
-          "value": ""
-        }
-      },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
-      "position": [
-        1712,
-        544
-      ],
-      "id": "e4474a74-2e95-49fc-b958-51a50b1afe03",
-      "name": "Delete rows or columns from sheet",
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "nSFCytuez8ODLoS7",
-          "name": "Google Sheets account 2"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
-      "typeVersion": 1,
-      "position": [
-        928,
-        752
-      ],
-      "id": "cbb0743f-7070-4c59-b53c-079b769472e0",
-      "name": "Groq Chat Model1",
-      "credentials": {
-        "groqApi": {
-          "id": "XVd5iWzDOmzUUOLX",
-          "name": "Groq account"
+          "id": "GIv8dhkadpt9lYVZ",
+          "name": "Google Sheets account 3"
         }
       }
     }
   ],
   "pinData": {},
   "connections": {
-    "When chat message received": {
+    "On form submission": {
       "main": [
-        [
-          {
-            "node": "AI Agent1",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 1
-          },
-          {
-            "node": "Merge1",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
-    "Google Gemini Chat Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "AI Agent": {
-      "main": [
-        [
-          {
-            "node": "Append row in sheet1",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Split Out",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Structured Output Parser": {
-      "ai_outputParser": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "ai_outputParser",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Split Out": {
-      "main": [
-        [
-          {
-            "node": "Append row in sheet",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Append row in sheet": {
-      "main": [
-        []
-      ]
-    },
-    "Create an event": {
-      "main": [
-        []
-      ]
-    },
-    "AI Agent1": {
-      "main": [
-        [
-          {
-            "node": "Switch",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Google Gemini Chat Model1": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "AI Agent1",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Switch": {
-      "main": [
-        [
-          {
-            "node": "Get row(s) in sheet",
-            "type": "main",
-            "index": 0
-          }
-        ],
         [
           {
             "node": "AI Agent",
             "type": "main",
             "index": 0
           }
-        ],
-        [
-          {
-            "node": "Get row(s) in sheet1",
-            "type": "main",
-            "index": 0
-          }
         ]
-      ]
-    },
-    "Get row(s) in sheet": {
-      "main": [
-        [
-          {
-            "node": "Aggregate",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Structured Output Parser1": {
-      "ai_outputParser": [
-        [
-          {
-            "node": "AI Agent2",
-            "type": "ai_outputParser",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "AI Agent2": {
-      "main": [
-        [
-          {
-            "node": "Update row in sheet",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Update row in sheet": {
-      "main": [
-        []
-      ]
-    },
-    "Aggregate": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Append row in sheet1": {
-      "main": [
-        []
       ]
     },
     "Groq Chat Model": {
       "ai_languageModel": [
         [
           {
-            "node": "AI Agent2",
+            "node": "AI Agent",
             "type": "ai_languageModel",
             "index": 0
           }
         ]
       ]
     },
-    "Merge": {
-      "main": [
+    "Append row in sheet in Google Sheets": {
+      "ai_tool": [
         [
           {
-            "node": "AI Agent2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Structured Output Parser2": {
-      "ai_outputParser": [
-        [
-          {
-            "node": "AI Agent1",
-            "type": "ai_outputParser",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Get row(s) in sheet1": {
-      "main": [
-        [
-          {
-            "node": "Aggregate1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Aggregate1": {
-      "main": [
-        [
-          {
-            "node": "Merge1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Merge1": {
-      "main": [
-        [
-          {
-            "node": "AI Agent3",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Structured Output Parser3": {
-      "ai_outputParser": [
-        [
-          {
-            "node": "AI Agent3",
-            "type": "ai_outputParser",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "AI Agent3": {
-      "main": [
-        [
-          {
-            "node": "If",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "If": {
-      "main": [
-        [
-          {
-            "node": "Delete rows or columns from sheet",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Delete an event": {
-      "main": [
-        []
-      ]
-    },
-    "Groq Chat Model1": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "AI Agent3",
-            "type": "ai_languageModel",
+            "node": "AI Agent",
+            "type": "ai_tool",
             "index": 0
           }
         ]
@@ -1316,15 +264,14 @@
   "active": false,
   "settings": {
     "executionOrder": "v1",
-    "binaryMode": "separate",
-    "availableInMCP": false
+    "binaryMode": "separate"
   },
-  "versionId": "f9776d5b-b7ff-42be-98b3-9c1d3c9c241c",
+  "versionId": "789e1646-e8ca-433f-a27c-bbf8457e2c89",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "2ddca90e5f1237bac2d7bdb6cc672beabbea4349f12469705dc7d0d079dccb19"
   },
   "nodeGroups": [],
-  "id": "LS1ea7TPKtcrXWHp",
+  "id": "2GwoPpT9tz5A59S2",
   "tags": []
 }
