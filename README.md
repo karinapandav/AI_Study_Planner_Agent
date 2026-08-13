@@ -1,108 +1,84 @@
-# 🎓 AI Study Planner Agent
+# AI Study Planner Agent
 
-An AI-powered Study Planner built using **n8n**, **Google Gemini/Groq**, **Google Sheets**, and **Google Calendar**. The assistant generates personalized study schedules, stores them in Google Sheets, creates Google Calendar events, and intelligently reschedules study sessions using natural language.
+An AI-powered study planning and scheduling agent built with n8n, Google Gemini/Groq, Google Sheets, and Google Calendar.
 
-This project demonstrates how AI agents can automate real-world productivity workflows through conversational interfaces and workflow automation.
+The agent allows students to create personalized study plans using natural language, automatically stores study sessions, creates calendar events, and supports rescheduling existing sessions through conversational commands.
 
+The project demonstrates how AI agents and workflow automation can be combined to build practical productivity tools without requiring a separate frontend application.
 ---
 
-# ✨ Features
+# Features
+**AI Study Plan Generation**
+Generate personalized study schedules based on:
+Exam details
+Subjects/topics
+Available study time
+Study priorities
+Exam date
 
-## 📅 AI Study Plan Generation
-- Generate personalized study plans based on exam details
-- Automatically divide syllabus into multiple study sessions
-- Prioritize topics based on importance
-- Produce structured JSON outputs for downstream automation
+The AI breaks the syllabus into manageable study sessions and produces structured outputs for downstream automation.
 
----
-
-## 🤖 Conversational AI Agent
-- Chat-based interaction
-- Understands natural language requests
-- Supports multiple study-related commands
-- Maintains conversation context
-
+**Conversational AI Agent**
+Users can interact with the study planner using natural language.
 Example:
+Create a study plan for my DBMS exam.
+Generate a study schedule for my Machine Learning exam.
+I have 3 hours every day and my exam is in two weeks. Create a plan.
 
-> "Create a study plan for my DBMS exam."
+**AI Intent Classification**
+The workflow identifies the user's intent and routes the request to the appropriate process.
+Currently supported intents:
+Create Study Plan
+Reschedule Study Session
 
----
+This allows multiple study-management operations to be handled through a single conversational workflow.
 
-## 🎯 AI Intent Classification
-
-Automatically classifies user requests into:
-
-- Create Study Plan
-- Reschedule Study Session
-
-This enables a single chatbot to intelligently route requests to different workflows.
-
----
-
-## 🔄 Intelligent Study Session Rescheduler
-
-Users can modify their study plans using natural language.
-
+**Intelligent Study Session Rescheduling**
+Users can modify existing sessions using natural language.
 Examples:
+Move my Calculus session to tomorrow.
+Shift my DBMS session to Friday at 2 PM.
+Reschedule my Mathematics revision.
 
-- Reschedule my Calculus session.
-- Move tomorrow's DBMS session to Friday.
-- Shift my Mathematics session to 2 PM.
+The workflow:
+Reads existing study sessions.
+Identifies the relevant session.
+Generates the updated schedule.
+Updates Google Sheets.
+Synchronizes the change with Google Calendar.
 
-The AI automatically:
-
-- Reads existing study sessions
-- Identifies the correct session
-- Generates the updated schedule
-- Updates Google Sheets
-- Synchronizes Google Calendar
-
----
-
-## 📊 Google Sheets Integration
-
-Automatically maintains study data.
-
-### Plans Sheet
-
-Stores:
-
-- Plan ID
-- Exam Name
-- Start Date
-- Exam Date
-- Created Timestamp
-
-### Sessions Sheet
+**Google Sheets Integration**
+Google Sheets acts as the lightweight data layer for storing study plans and sessions.
+Plans
+Stores information such as:
+Plan ID
+Exam Name
+Start Date
+Exam Date
+Created Timestamp
+Sessions
 
 Stores:
+Plan ID
+Date
+Start Time
+End Time
+Subject
+Topic
+Priority
+Status
+Calendar Event ID
 
-- Plan ID
-- Date
-- Start Time
-- End Time
-- Subject
-- Topic
-- Priority
-- Status
-- Calendar Event ID
-
----
-
-## 📅 Google Calendar Integration
-
-Automatically:
-
-- Creates calendar events
-- Updates events after rescheduling
-- Keeps study sessions synchronized
-
----
-
-## 📋 Structured AI Outputs
-
-Uses Structured Output Parser to guarantee valid JSON responses.
-
+**Google Calendar Integration**
+Study sessions are automatically synchronized with Google Calendar.
+The workflow can:
+Create study events
+Store Calendar Event IDs
+Update events when sessions are rescheduled
+ 
+**Structured AI Outputs**
+AI responses are converted into structured JSON using n8n's Structured Output Parser.
+This makes the AI output reliable enough to pass between different workflow stages.
 
 # 🛠 Tech Stack
 
