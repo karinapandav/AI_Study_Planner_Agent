@@ -3,95 +3,10 @@
   "nodes": [
     {
       "parameters": {
-        "formTitle": "AI Study Planner",
-        "formDescription": "Create a personalized study plan based on your subjects, available time and exam goals.",
-        "formFields": {
-          "values": [
-            {
-              "fieldLabel": "Name",
-              "requiredField": true
-            },
-            {
-              "fieldLabel": "What subjects/topics do you need to study?",
-              "fieldType": "textarea",
-              "placeholder": "Example: DSA, SQL, Python, Machine Learning",
-              "requiredField": true
-            },
-            {
-              "fieldLabel": "Exam Date",
-              "fieldType": "date",
-              "requiredField": true
-            },
-            {
-              "fieldLabel": "How many hours can you study per day?",
-              "fieldType": "number",
-              "requiredField": true
-            },
-            {
-              "fieldLabel": "Current level",
-              "fieldType": "dropdown",
-              "fieldOptions": {
-                "values": [
-                  {
-                    "option": "Beginner"
-                  },
-                  {
-                    "option": "Intermediate"
-                  },
-                  {
-                    "option": "Advanced"
-                  }
-                ]
-              },
-              "requiredField": true
-            },
-            {
-              "fieldLabel": "Weak Topics",
-              "fieldType": "textarea",
-              "placeholder": "Example: Dynamic Programming, SQL joins, probability"
-            },
-            {
-              "fieldLabel": "Which topics have you already completed?",
-              "fieldType": "textarea"
-            },
-            {
-              "fieldLabel": "Study Preference",
-              "fieldType": "dropdown",
-              "fieldOptions": {
-                "values": [
-                  {
-                    "option": "Theory + Practice"
-                  },
-                  {
-                    "option": "Mostly Practice"
-                  },
-                  {
-                    "option": "Balanced"
-                  }
-                ]
-              },
-              "requiredField": true
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.formTrigger",
-      "typeVersion": 2.6,
-      "position": [
-        0,
-        0
-      ],
-      "id": "35785530-1d7b-4f90-8360-261078310857",
-      "name": "On form submission",
-      "webhookId": "942e4a5a-5170-44d7-8fc8-c34795374331"
-    },
-    {
-      "parameters": {
         "promptType": "define",
-        "text": "=The student has provided the following request:\nname - {{ $json.Name }}\nsubjects/topics - {{ $json[\"What subjects/topics do you need to study?\"] }}\nexam date - {{ $json[\"Exam Date\"] }}\nhours - {{ $json[\"How many hours can you study per day?\"] }}\ncurrent lvl - {{ $json[\"Current level\"] }}\nweak topics -{{ $json[\"Weak Topics\"] }}\ncompleted topics- {{ $json[\"Which topics have you already completed?\"] }}\npreference - {{ $json[\"Study Preference\"] }}\n\nUse the available tools and information to understand the request and help the student.\n\nIf the student wants to create a study plan, create a realistic plan based on their requirements.\n\nIf the student wants to reschedule a study session, identify the relevant existing session and make the requested change.\n\nReturn a clear and concise response that the student can directly understand and act upon.",
+        "text": "=Student Name: {{ $json['Your Name'] }}\nExam Date: {{ $json['Exam Date'] }}\nSubjects: {{ $json['Subjects'] }}\nDaily Available Hours: {{ $json['Daily Available Hours'] }}\nStudy Start Time: {{ $json['Study Start Time'] }}\nToday's Date: {{ $now.toFormat('yyyy-MM-dd') }}",
         "options": {
-          "systemMessage": "You are an AI Study Planner Agent.\n\nYour job is to help students create realistic, personalized study plans and reschedule existing study sessions.\n\nYou must:\n- Understand the student's goals, subjects, exam date, available study time, current level, completed topics, and weak topics.\n- Create practical schedules that fit within the student's available study time.\n- Prioritize weak and important topics.\n- Balance learning, problem-solving, revision, and breaks.\n- Avoid unrealistic workloads.\n- Respect the student's exam date and available time.\n- When rescheduling a session, identify the correct existing session and change only what the student requested.\n- Keep the response clear, concise, and actionable.\n\nFor study plan requests:\n1. Identify the subjects and topics.\n2. Prioritize topics based on weakness, importance, and exam proximity.\n3. Divide the available time into manageable study sessions.\n4. Include practice and revision.\n5. Reserve additional revision time before the exam.\n6. Do not schedule more study time than the student has available.\n\nFor rescheduling requests:\n1. Understand which session the student wants to change.\n2. Identify the requested new date/time.\n3. Preserve all other session information unless the student explicitly asks to change it.\n4. Return the updated session information clearly.\n\nIf important information is missing, ask the student for the missing information instead of making unreasonable assumptions.\n\nDo not invent exam dates, subjects, study sessions, or other information that was not provided.\n\nKeep responses student-friendly and practical.\n\nTool usage:\n\n- Use Google Sheets when you need to read, create, or update study plans or study sessions.\n- Use Google Calendar when you need to create or update calendar events for study sessions.\n- When creating a study plan, ensure the study sessions stored in Google Sheets match the events created in Google Calendar.\n- When rescheduling a session, update both Google Sheets and the corresponding Google Calendar event.\n- Do not modify existing data unless the student's request requires it."
+          "systemMessage": "You are an expert study planner and educational coach. Create a personalised week-wise study schedule for a student.\n\nRules:\n1. Count the exact number of days from today to the exam date (inclusive of today, exclusive of exam day)\n2. Distribute subjects evenly across available days — more revision sessions closer to the exam\n3. First 60% of days: New Learning sessions. Last 40% of days: Revision + Practice sessions\n4. Keep each session duration between 1.5 and 3 hours\n5. Total sessions per day must not exceed the daily available hours\n6. Spread subjects fairly — no subject should be neglected\n7. Include short breaks implicitly (do not schedule break blocks)\n8. Assign specific topics per subject (not just 'study mathematics' — be specific like 'Quadratic Equations', 'Integration by Parts', etc.)\n9. Last 2 days before exam: only Revision and Quick Practice sessions\n\nSession types allowed: New Learning, Revision, Practice Test, Quick Review\nPriority levels: High, Medium, Low\n\nReturn ONLY a valid JSON object — no markdown, no backticks, no explanation:\n{\n  \"student_name\": \"string\",\n  \"exam_date\": \"YYYY-MM-DD\",\n  \"start_date\": \"YYYY-MM-DD\",\n  \"total_days\": 14,\n  \"total_sessions\": 28,\n  \"subjects\": [\"Subject1\", \"Subject2\"],\n  \"overview_summary\": \"3-4 sentence summary of the study plan strategy\",\n  \"study_tips\": [\"tip 1\", \"tip 2\", \"tip 3\", \"tip 4\", \"tip 5\"],\n  \"daily_plan\": [\n    {\n      \"date\": \"YYYY-MM-DD\",\n      \"day_number\": 1,\n      \"day_of_week\": \"Monday\",\n      \"sessions\": [\n        {\n          \"subject\": \"Mathematics\",\n          \"topic\": \"Quadratic Equations — Discriminant and Roots\",\n          \"duration_hours\": 2,\n          \"start_time\": \"09:00\",\n          \"end_time\": \"11:00\",\n          \"session_type\": \"New Learning\",\n          \"priority\": \"High\"\n        }\n      ]\n    }\n  ]\n}\n\nReturn ONLY the JSON object. Nothing before or after it."
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
@@ -125,8 +40,127 @@
     },
     {
       "parameters": {
-        "descriptionType": "manual",
-        "toolDescription": "Add a new study plan to the Plans sheet.\n\nProvide:\n- plan_id: a unique ID for the study plan\n- exam_name: the name of the exam\n- start_date: the date the study plan begins\n- exam_date: the exam date\n- created_at: the date and time the plan was created\n\nUse this tool only when creating a new study plan.\n\nDo not provide sheet names, spreadsheet names, row objects, or custom JSON objects. The spreadsheet and sheet are already configured.",
+        "formTitle": "Daily Study Planner",
+        "formDescription": "Enter your exam details and get a personalised week-wise study schedule added to your Google Calendar — automatically.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Your Name",
+              "placeholder": "e.g. Rahul Sharma",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Exam Date",
+              "fieldType": "date",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Subjects",
+              "placeholder": "e.g. Mathematics, Physics, Chemistry, English",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Daily Available Hours",
+              "fieldType": "number",
+              "placeholder": "e.g. 6",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Study Start Time",
+              "placeholder": "e.g. 09:00 (24-hour format)",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Your Email",
+              "fieldType": "email",
+              "placeholder": "your@email.com",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e286847b-605c-4d12-909a-10cc9749c939",
+      "name": "1. Form — Study Planner Input",
+      "type": "n8n-nodes-base.formTrigger",
+      "position": [
+        -32,
+        0
+      ],
+      "webhookId": "404e81ac-1619-45f6-9857-0200b6cc91e2",
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse AI output and flatten all sessions into individual items\nconst raw = $input.first().json.output || $input.first().json.text || '';\n\nlet schedule;\ntry {\n  const cleaned = raw.replace(/```json/gi, '').replace(/```/g, '').trim();\n  schedule = JSON.parse(cleaned);\n} catch (e) {\n  throw new Error('Could not parse study schedule JSON from AI. Raw: ' + raw.slice(0, 300));\n}\n\nif (!schedule.daily_plan || schedule.daily_plan.length === 0) {\n  throw new Error('AI returned an empty daily plan. Check the exam date and subjects.');\n}\n\n// Flatten all sessions into individual items for SplitInBatches\nconst sessions = [];\nfor (const day of schedule.daily_plan) {\n  for (const session of (day.sessions || [])) {\n    sessions.push({\n      // Session fields for Calendar + Sheets\n      student_name: schedule.student_name,\n      exam_date: schedule.exam_date,\n      date: day.date,\n      day_number: day.day_number,\n      day_of_week: day.day_of_week,\n      subject: session.subject,\n      topic: session.topic,\n      duration_hours: session.duration_hours,\n      start_time: session.start_time,\n      end_time: session.end_time,\n      session_type: session.session_type,\n      priority: session.priority,\n      // Full schedule stored for reference after loop\n      _overview_summary: schedule.overview_summary,\n      _study_tips: JSON.stringify(schedule.study_tips || []),\n      _total_sessions: schedule.total_sessions,\n      _total_days: schedule.total_days,\n      _subjects: JSON.stringify(schedule.subjects || []),\n      _user_email: $('1. Form — Study Planner Input').item.json['Your Email'],\n      _user_name: $('1. Form — Study Planner Input').item.json['Your Name']\n    });\n  }\n}\n\nif (sessions.length === 0) {\n  throw new Error('No study sessions generated. The exam date may be too close or in the past.');\n}\n\nreturn sessions.map(s => ({ json: s }));"
+      },
+      "id": "ca0e9e94-1097-46d8-a222-363b1dcd62bb",
+      "name": "3. Code — Parse Schedule",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        544,
+        0
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "4bf8c881-0ed7-4d0c-95cb-aa691f13576c",
+      "name": "4. SplitInBatches — One Session at a Time",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [
+        784,
+        0
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "karinapandav1911@gmail.com",
+          "mode": "list",
+          "cachedResultName": "karinapandav1911@gmail.com"
+        },
+        "start": "={{ $json.date + 'T' + $json.start_time + ':00' }}",
+        "end": "={{ $json.date + 'T' + $json.end_time + ':00' }}",
+        "additionalFields": {
+          "description": "=Session Type: {{ $json.session_type }}\nPriority: {{ $json.priority }}\nDuration: {{ $json.duration_hours }} hour(s)\nDay {{ $json.day_number }} of {{ $json._total_days }}\n\nExam Date: {{ $json.exam_date }}\nStudent: {{ $json.student_name }}",
+          "summary": "={{ $json.subject + ' — ' + $json.topic }}"
+        }
+      },
+      "id": "f7b94028-eb44-4897-b25f-3a926161c3b4",
+      "name": "5. Google Calendar — Create Study Event",
+      "type": "n8n-nodes-base.googleCalendar",
+      "position": [
+        1008,
+        -16
+      ],
+      "typeVersion": 1.3,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "Fzzn9uQhb3oxOcaY",
+          "name": "Google Calendar account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build all session rows for Sheets and HTML email from stored data\n// This runs ONCE after all calendar events are created (SplitInBatches done output)\n// Get all sessions from node 3 parse output\nconst allSessions = $('3. Code — Parse Schedule').all();\n\nif (!allSessions || allSessions.length === 0) {\n  throw new Error('No session data found from parse node.');\n}\n\n// Get metadata from first session\nconst meta = allSessions[0].json;\nconst studentName = meta._user_name || '';\nconst userEmail = meta._user_email || '';\nconst examDate = meta.exam_date || '';\nconst overviewSummary = meta._overview_summary || '';\nconst studyTips = JSON.parse(meta._study_tips || '[]');\nconst subjects = JSON.parse(meta._subjects || '[]');\nconst totalSessions = meta._total_sessions || allSessions.length;\nconst totalDays = meta._total_days || 0;\n\n// Build Sheets rows array\nconst sheetRows = allSessions.map(s => ({\n  'Student Name': s.json.student_name,\n  'Exam Date': s.json.exam_date,\n  'Subject': s.json.subject,\n  'Topic': s.json.topic,\n  'Date': s.json.date,\n  'Day': s.json.day_of_week + ' (Day ' + s.json.day_number + ')',\n  'Start Time': s.json.start_time,\n  'End Time': s.json.end_time,\n  'Duration (hrs)': s.json.duration_hours,\n  'Session Type': s.json.session_type,\n  'Priority': s.json.priority,\n  'Status': 'Scheduled'\n}));\n\n// Group sessions by date for HTML email\nconst byDate = {};\nfor (const s of allSessions) {\n  const d = s.json.date;\n  if (!byDate[d]) byDate[d] = { day_of_week: s.json.day_of_week, day_number: s.json.day_number, sessions: [] };\n  byDate[d].sessions.push(s.json);\n}\n\nconst esc = str => String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');\n\nconst sessionTypeColor = t => {\n  if (t === 'New Learning') return '#3b82f6';\n  if (t === 'Revision') return '#10b981';\n  if (t === 'Practice Test') return '#f59e0b';\n  if (t === 'Quick Review') return '#8b5cf6';\n  return '#6b7280';\n};\n\nconst priorityBadge = p => {\n  const c = p === 'High' ? '#ef4444' : p === 'Medium' ? '#f97316' : '#22c55e';\n  return `<span style=\"background:${c};color:#fff;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700;\">${esc(p)}</span>`;\n};\n\n// Build schedule table rows grouped by day\nlet scheduleHtml = '';\nfor (const [date, dayData] of Object.entries(byDate)) {\n  const dateFormatted = new Date(date).toLocaleDateString('en-US', { weekday:'long', month:'short', day:'numeric' });\n  scheduleHtml += `\n    <tr>\n      <td colspan=\"5\" style=\"background:#1e3a5f;color:#fff;padding:8px 12px;font-size:12px;font-weight:700;\">\n        Day ${dayData.day_number} — ${dateFormatted}\n      </td>\n    </tr>`;\n  for (const session of dayData.sessions) {\n    const tc = sessionTypeColor(session.session_type);\n    scheduleHtml += `\n    <tr style=\"border-bottom:1px solid #f0f4f8;\">\n      <td style=\"padding:7px 12px;font-size:13px;font-weight:600;color:#1e3a5f;\">${esc(session.subject)}</td>\n      <td style=\"padding:7px 12px;font-size:12px;color:#374151;\">${esc(session.topic)}</td>\n      <td style=\"padding:7px 12px;font-size:12px;color:#6b7280;\">${esc(session.start_time)} – ${esc(session.end_time)}</td>\n      <td style=\"padding:7px 12px;\">\n        <span style=\"background:${tc};color:#fff;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600;\">${esc(session.session_type)}</span>\n      </td>\n      <td style=\"padding:7px 12px;\">${priorityBadge(session.priority)}</td>\n    </tr>`;\n  }\n}\n\nconst tipsHtml = studyTips.map(t => `<li style=\"margin-bottom:6px;font-size:13px;color:#374151;\">${esc(t)}</li>`).join('');\n\nconst htmlEmail = `<!DOCTYPE html>\n<html>\n<head><meta charset=\"UTF-8\"></head>\n<body style=\"font-family:Arial,sans-serif;max-width:700px;margin:0 auto;background:#f0f4f8;padding:20px;\">\n\n  <div style=\"background:#1e3a5f;padding:28px;border-radius:10px 10px 0 0;\">\n    <div style=\"font-size:11px;color:#93c5fd;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;\">Study Planner</div>\n    <h1 style=\"color:#fff;font-size:22px;margin:0;\">Your Study Schedule is Ready, ${esc(studentName)}!</h1>\n    <p style=\"color:#93c5fd;font-size:13px;margin:8px 0 0;\">Exam Date: ${esc(examDate)} &nbsp;•&nbsp; ${totalSessions} sessions across ${totalDays} days</p>\n  </div>\n\n  <div style=\"background:#fff;padding:24px;\">\n    <div style=\"background:#eff6ff;border-left:4px solid #3b82f6;padding:14px 16px;border-radius:0 6px 6px 0;margin-bottom:20px;\">\n      <p style=\"font-weight:700;color:#1e3a5f;margin:0 0 6px;\">Study Plan Overview</p>\n      <p style=\"font-size:13px;color:#374151;margin:0;line-height:1.7;\">${esc(overviewSummary)}</p>\n    </div>\n\n    <p style=\"font-size:13px;color:#374151;margin-bottom:16px;\">All study sessions have been added to your Google Calendar. Here is your complete schedule:</p>\n\n    <table style=\"width:100%;border-collapse:collapse;font-size:13px;margin-bottom:24px;\">\n      <thead>\n        <tr style=\"background:#f8fafc;\">\n          <th style=\"padding:8px 12px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;border-bottom:2px solid #e5e7eb;\">Subject</th>\n          <th style=\"padding:8px 12px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;border-bottom:2px solid #e5e7eb;\">Topic</th>\n          <th style=\"padding:8px 12px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;border-bottom:2px solid #e5e7eb;\">Time</th>\n          <th style=\"padding:8px 12px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;border-bottom:2px solid #e5e7eb;\">Type</th>\n          <th style=\"padding:8px 12px;text-align:left;font-size:11px;color:#6b7280;text-transform:uppercase;border-bottom:2px solid #e5e7eb;\">Priority</th>\n        </tr>\n      </thead>\n      <tbody>${scheduleHtml}</tbody>\n    </table>\n\n    <h3 style=\"color:#1e3a5f;font-size:14px;margin:0 0 10px;\">Study Tips</h3>\n    <ul style=\"padding-left:18px;margin:0 0 20px;\">${tipsHtml}</ul>\n\n    <div style=\"background:#f0fdf4;border-left:4px solid #10b981;padding:12px 16px;border-radius:0 6px 6px 0;font-size:13px;color:#065f46;\">\n      All ${totalSessions} study sessions are now in your Google Calendar. Open your calendar to view the full schedule.\n    </div>\n  </div>\n\n  <div style=\"background:#1e3a5f;padding:14px 24px;border-radius:0 0 10px 10px;text-align:center;\">\n    <p style=\"color:#93c5fd;font-size:11px;margin:0;\">Generated by n8n Daily Study Planner &nbsp;•&nbsp; Powered by GPT-4o-mini</p>\n  </div>\n\n</body>\n</html>`;\n\nreturn [{ json: {\n  user_email: userEmail,\n  student_name: studentName,\n  exam_date: examDate,\n  total_sessions: totalSessions,\n  total_days: totalDays,\n  sheet_rows: sheetRows,\n  html_email: htmlEmail\n}}];"
+      },
+      "id": "b474add3-c5d0-4f75-8196-575913db9c8a",
+      "name": "6. Code — Build Sheet Rows and Email",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1376,
+        16
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
         "operation": "append",
         "documentId": {
           "__rl": true,
@@ -143,14 +177,8 @@
           "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sfv_rZRcsNz0SNRRo4Q4r21JPDSuuc-ijeXZhL9EX6Q/edit#gid=186484186"
         },
         "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "Plan ID": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Plan_ID', ``, 'string') }}",
-            "Exam Date": "={{ $('On form submission').item.json[\"Exam Date\"] }}",
-            "Created At": "={{ $('On form submission').item.json.submittedAt }}",
-            "Exam Name": "={{ $('On form submission').item.json[\"What subjects/topics do you need to study?\"] }}",
-            "Start Date": "={{ $('On form submission').item.json.submittedAt }}"
-          },
+          "mappingMode": "autoMapInputData",
+          "value": {},
           "matchingColumns": [],
           "schema": [
             {
@@ -160,8 +188,7 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
+              "canBeUsedToMatch": true
             },
             {
               "id": "Exam Name",
@@ -170,8 +197,7 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
+              "canBeUsedToMatch": true
             },
             {
               "id": "Start Date",
@@ -180,8 +206,7 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
+              "canBeUsedToMatch": true
             },
             {
               "id": "Exam Date",
@@ -190,8 +215,7 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
+              "canBeUsedToMatch": true
             },
             {
               "id": "Created At",
@@ -200,8 +224,106 @@
               "defaultMatch": false,
               "display": true,
               "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Plan_ID",
+              "displayName": "Plan_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "What subjects/topics do you need to study?",
+              "displayName": "What subjects/topics do you need to study?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "How many hours can you study per day?",
+              "displayName": "How many hours can you study per day?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Current level",
+              "displayName": "Current level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Weak Topics",
+              "displayName": "Weak Topics",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Which topics have you already completed?",
+              "displayName": "Which topics have you already completed?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Study Preference",
+              "displayName": "Study Preference",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "submittedAt",
+              "displayName": "submittedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "formMode",
+              "displayName": "formMode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "toolCallId",
+              "displayName": "toolCallId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
             }
           ],
           "attemptToConvertTypes": false,
@@ -209,35 +331,49 @@
         },
         "options": {}
       },
-      "type": "n8n-nodes-base.googleSheetsTool",
-      "typeVersion": 4.7,
+      "id": "1ae7bcf0-218c-4edb-8a7c-4772b24640eb",
+      "name": "7. Google Sheets — Log Study Plan",
+      "type": "n8n-nodes-base.googleSheets",
       "position": [
-        384,
-        208
+        1664,
+        16
       ],
-      "id": "941414f5-911b-4a59-9a99-a3e4786e57de",
-      "name": "Append row in sheet in Google Sheets",
+      "typeVersion": 4.5,
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "GIv8dhkadpt9lYVZ",
           "name": "Google Sheets account 3"
         }
       }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.user_email }}",
+        "subject": "=Your Study Schedule is Ready — Exam on {{ $json.exam_date }} | {{ $json.total_sessions }} Sessions Planned",
+        "message": "={{ $json.html_email }}",
+        "options": {
+          "senderName": "Study Planner Bot"
+        }
+      },
+      "id": "fd95c9db-a566-43b1-b6d3-b12c4308574f",
+      "name": "8. Gmail — Send Confirmation Email",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        1936,
+        16
+      ],
+      "webhookId": "study-planner-gmail-v1",
+      "typeVersion": 2.1,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "oMG6WK3a83cumInx",
+          "name": "Gmail account"
+        }
+      }
     }
   ],
   "pinData": {},
   "connections": {
-    "On form submission": {
-      "main": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Groq Chat Model": {
       "ai_languageModel": [
         [
@@ -249,12 +385,85 @@
         ]
       ]
     },
-    "Append row in sheet in Google Sheets": {
-      "ai_tool": [
+    "1. Form — Study Planner Input": {
+      "main": [
         [
           {
             "node": "AI Agent",
-            "type": "ai_tool",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3. Code — Parse Schedule": {
+      "main": [
+        [
+          {
+            "node": "4. SplitInBatches — One Session at a Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4. SplitInBatches — One Session at a Time": {
+      "main": [
+        [
+          {
+            "node": "5. Google Calendar — Create Study Event",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "6. Code — Build Sheet Rows and Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5. Google Calendar — Create Study Event": {
+      "main": [
+        [
+          {
+            "node": "4. SplitInBatches — One Session at a Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6. Code — Build Sheet Rows and Email": {
+      "main": [
+        [
+          {
+            "node": "7. Google Sheets — Log Study Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7. Google Sheets — Log Study Plan": {
+      "main": [
+        [
+          {
+            "node": "8. Gmail — Send Confirmation Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "3. Code — Parse Schedule",
+            "type": "main",
             "index": 0
           }
         ]
@@ -264,9 +473,10 @@
   "active": false,
   "settings": {
     "executionOrder": "v1",
-    "binaryMode": "separate"
+    "binaryMode": "separate",
+    "availableInMCP": false
   },
-  "versionId": "789e1646-e8ca-433f-a27c-bbf8457e2c89",
+  "versionId": "b0b91553-bf45-47b7-beb8-2140b03726b9",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "2ddca90e5f1237bac2d7bdb6cc672beabbea4349f12469705dc7d0d079dccb19"
