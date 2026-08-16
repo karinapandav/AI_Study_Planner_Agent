@@ -6,7 +6,7 @@
         "promptType": "define",
         "text": "=Student Name: {{ $json['Your Name'] }}\nExam Date: {{ $json['Exam Date'] }}\nSubjects: {{ $json['Subjects'] }}\nDaily Available Hours: {{ $json['Daily Available Hours'] }}\nStudy Start Time: {{ $json['Study Start Time'] }}\nToday's Date: {{ $now.toFormat('yyyy-MM-dd') }}",
         "options": {
-          "systemMessage": "You are an expert study planner and educational coach. Create a personalised week-wise study schedule for a student.\n\nRules:\n1. Count the exact number of days from today to the exam date (inclusive of today, exclusive of exam day)\n2. Distribute subjects evenly across available days — more revision sessions closer to the exam\n3. First 60% of days: New Learning sessions. Last 40% of days: Revision + Practice sessions\n4. Keep each session duration between 1.5 and 3 hours\n5. Total sessions per day must not exceed the daily available hours\n6. Spread subjects fairly — no subject should be neglected\n7. Include short breaks implicitly (do not schedule break blocks)\n8. Assign specific topics per subject (not just 'study mathematics' — be specific like 'Quadratic Equations', 'Integration by Parts', etc.)\n9. Last 2 days before exam: only Revision and Quick Practice sessions\n\nSession types allowed: New Learning, Revision, Practice Test, Quick Review\nPriority levels: High, Medium, Low\n\nReturn ONLY a valid JSON object — no markdown, no backticks, no explanation:\n{\n  \"student_name\": \"string\",\n  \"exam_date\": \"YYYY-MM-DD\",\n  \"start_date\": \"YYYY-MM-DD\",\n  \"total_days\": 14,\n  \"total_sessions\": 28,\n  \"subjects\": [\"Subject1\", \"Subject2\"],\n  \"overview_summary\": \"3-4 sentence summary of the study plan strategy\",\n  \"study_tips\": [\"tip 1\", \"tip 2\", \"tip 3\", \"tip 4\", \"tip 5\"],\n  \"daily_plan\": [\n    {\n      \"date\": \"YYYY-MM-DD\",\n      \"day_number\": 1,\n      \"day_of_week\": \"Monday\",\n      \"sessions\": [\n        {\n          \"subject\": \"Mathematics\",\n          \"topic\": \"Quadratic Equations — Discriminant and Roots\",\n          \"duration_hours\": 2,\n          \"start_time\": \"09:00\",\n          \"end_time\": \"11:00\",\n          \"session_type\": \"New Learning\",\n          \"priority\": \"High\"\n        }\n      ]\n    }\n  ]\n}\n\nReturn ONLY the JSON object. Nothing before or after it."
+          "systemMessage": "You are an expert study planner and educational coach. Create a personalised week-wise study schedule for a student.\n\nRules:\n1. Count the exact number of days from today to the exam date (inclusive of today, exclusive of exam day)\n2. Distribute subjects evenly across available days — more revision sessions closer to the exam\n3. First 60% of days: New Learning sessions. Last 40% of days: Revision + Practice sessions\n4. Keep each session duration between 1.5 and 3 hours\n5. Total sessions per day must not exceed the daily available hours\n6. Spread subjects fairly — no subject should be neglected\n7. Include short breaks implicitly (do not schedule break blocks)\n8. Assign specific topics per subject (not just 'study mathematics' — be specific like 'Quadratic Equations', 'Integration by Parts', etc.)\n9. Last 2 days before exam: only Revision and Quick Practice sessions\n\nSession types allowed: New Learning, Revision, Practice Test, Quick Review\nPriority levels: High, Medium, Low\n\nReturn ONLY a valid JSON object — no markdown, no backticks, no explanation:\n{\n  \"student_name\": \"string\",\n  \"exam_date\": \"YYYY-MM-DD\",\n  \"start_date\": \"YYYY-MM-DD\",\n  \"total_days\": 14,\n  \"total_sessions\": 28,\n  \"subjects\": [\"Subject1\", \"Subject2\"],\n  \"daily_plan\": [\n    {\n      \"date\": \"YYYY-MM-DD\",\n      \"day_number\": 1,\n      \"day_of_week\": \"Monday\",\n      \"sessions\": [\n        {\n          \"subject\": \"Mathematics\",\n          \"topic\": \"Quadratic Equations — Discriminant and Roots\",\n          \"duration_hours\": 2,\n          \"start_time\": \"09:00\",\n          \"end_time\": \"11:00\",\n          \"session_type\": \"New Learning\",\n          \"priority\": \"High\"\n        }\n      ]\n    }\n  ]\n}\n\nReturn ONLY the JSON object. Nothing before or after it."
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
@@ -21,7 +21,10 @@
     {
       "parameters": {
         "model": "openai/gpt-oss-120b",
-        "options": {}
+        "options": {
+          "maxTokensToSample": 5000,
+          "temperature": 0.7
+        }
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
       "typeVersion": 1,
@@ -135,8 +138,8 @@
       "name": "5. Google Calendar — Create Study Event",
       "type": "n8n-nodes-base.googleCalendar",
       "position": [
-        1008,
-        -16
+        1040,
+        16
       ],
       "typeVersion": 1.3,
       "credentials": {
@@ -154,8 +157,8 @@
       "name": "6. Code — Build Sheet Rows and Email",
       "type": "n8n-nodes-base.code",
       "position": [
-        1376,
-        16
+        1360,
+        0
       ],
       "typeVersion": 2
     },
@@ -173,159 +176,14 @@
           "__rl": true,
           "value": 186484186,
           "mode": "list",
-          "cachedResultName": "Plans",
+          "cachedResultName": "Study Planner",
           "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1sfv_rZRcsNz0SNRRo4Q4r21JPDSuuc-ijeXZhL9EX6Q/edit#gid=186484186"
         },
         "columns": {
           "mappingMode": "autoMapInputData",
           "value": {},
           "matchingColumns": [],
-          "schema": [
-            {
-              "id": "Plan ID",
-              "displayName": "Plan ID",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Exam Name",
-              "displayName": "Exam Name",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Start Date",
-              "displayName": "Start Date",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Exam Date",
-              "displayName": "Exam Date",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Created At",
-              "displayName": "Created At",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Plan_ID",
-              "displayName": "Plan_ID",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Name",
-              "displayName": "Name",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "What subjects/topics do you need to study?",
-              "displayName": "What subjects/topics do you need to study?",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "How many hours can you study per day?",
-              "displayName": "How many hours can you study per day?",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Current level",
-              "displayName": "Current level",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Weak Topics",
-              "displayName": "Weak Topics",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Which topics have you already completed?",
-              "displayName": "Which topics have you already completed?",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Study Preference",
-              "displayName": "Study Preference",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "submittedAt",
-              "displayName": "submittedAt",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "formMode",
-              "displayName": "formMode",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "toolCallId",
-              "displayName": "toolCallId",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            }
-          ],
+          "schema": [],
           "attemptToConvertTypes": false,
           "convertFieldsToString": false
         },
@@ -341,8 +199,8 @@
       "typeVersion": 4.5,
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "GIv8dhkadpt9lYVZ",
-          "name": "Google Sheets account 3"
+          "id": "csyWtRhgjD9C1PRC",
+          "name": "Google Sheets account"
         }
       }
     },
@@ -411,14 +269,14 @@
       "main": [
         [
           {
-            "node": "5. Google Calendar — Create Study Event",
+            "node": "6. Code — Build Sheet Rows and Email",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "6. Code — Build Sheet Rows and Email",
+            "node": "5. Google Calendar — Create Study Event",
             "type": "main",
             "index": 0
           }
@@ -476,7 +334,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "b0b91553-bf45-47b7-beb8-2140b03726b9",
+  "versionId": "94cd851c-961d-44b8-a6e3-4698a2025a31",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "2ddca90e5f1237bac2d7bdb6cc672beabbea4349f12469705dc7d0d079dccb19"
