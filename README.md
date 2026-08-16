@@ -1,370 +1,305 @@
 # AI Study Planner Agent
 
-An AI-powered study planning and scheduling workflow built with **n8n, Groq, Google Sheets, Google Calendar, and Gmail**.
+An AI-powered study planning and scheduling agent built with **n8n, Grok, Google Calendar, Google Sheets, and Gmail**.
 
-The AI Study Planner Agent takes a student's study requirements through a form, generates a personalized study schedule using an AI agent, converts the generated plan into structured study sessions, creates Google Calendar events, stores the sessions in Google Sheets, and sends the completed study plan through email.
+The system takes a student's study requirements through a form, uses an AI agent to generate a personalized day-by-day study schedule, validates and parses the structured plan, creates individual study sessions in Google Calendar, stores the complete plan in Google Sheets, and sends a confirmation email automatically.
 
-The project demonstrates how **AI agents, workflow automation, APIs, and cloud productivity tools** can be combined to build a practical productivity application without developing a separate frontend.
-
----
-
-# Features
-
-## AI Study Plan Generation
-
-The workflow generates personalized study schedules based on:
-
-* Student name
-* Subject/topic
-* Exam date
-* Available study hours per day
-* Current knowledge level
-* Weak topics
-* Completed topics
-* Study preference
-
-The AI analyzes the provided information and breaks the required syllabus into manageable study sessions.
-
-Each generated session contains information such as:
-
-* Date
-* Subject
-* Topic
-* Start time
-* End time
-* Session type
-* Priority
+🔗 **Live Demo:** https://n8n-service-tm25.onrender.com/form/a09fb499-2c9f-4bac-98ed-cb6663fee616
 
 ---
 
-## AI-Powered Planning
+## Overview
 
-The project uses an AI Agent powered by **Groq** to generate the study schedule.
+Planning a study schedule manually can be time-consuming, especially when students need to balance:
 
-The AI is instructed to:
+- Exam dates
+- Multiple subjects
+- Available study hours
+- Topic coverage
+- Revision
+- Practice sessions
+- Daily time constraints
 
-* Understand the student's requirements
-* Prioritize weak topics
-* Break large topics into smaller sessions
-* Allocate available study time
-* Include learning, revision, practice, and mock-test sessions
-* Respect the student's exam date and daily study limit
-* Produce structured data for downstream automation
+The **AI Study Planner Agent** automates this process.
 
----
-
-## Automatic Google Calendar Scheduling
-
-Generated study sessions are automatically converted into Google Calendar events.
-
-The workflow:
-
-1. Generates a study session.
-2. Creates a corresponding Calendar event.
-3. Retrieves the Calendar Event ID.
-4. Stores the event information with the study session.
-
-This allows the generated timetable to become an actionable calendar schedule instead of remaining only as text.
+A student provides their study requirements, and the AI generates a structured study plan based on predefined planning rules. The workflow then automatically converts the generated plan into actionable calendar events and stores the schedule for tracking.
 
 ---
 
-## Google Sheets Study Plan Storage
+## Features
 
-Google Sheets acts as the lightweight database for storing generated study sessions.
+### AI-Powered Study Planning
 
-Each study session can contain:
+Uses **Grok** to generate a personalized study schedule based on:
 
-| Field             | Description                          |
-| ----------------- | ------------------------------------ |
-| Plan ID           | Unique identifier for the study plan |
-| Date              | Study session date                   |
-| Start Time        | Session start time                   |
-| End Time          | Session end time                     |
-| Subject           | Subject being studied                |
-| Topic             | Specific topic                       |
-| Priority          | Session priority                     |
-| Status            | Current session status               |
-| Calendar Event ID | Associated Google Calendar event     |
+- Exam date
+- Available study time
+- Subjects
+- Study preferences
+- Planning constraints
 
-Google Sheets provides a simple and accessible way to view and manage the generated study schedule.
+### Automatic Google Calendar Scheduling
 
----
+Every generated study session is converted into a Google Calendar event with:
 
-## Email Delivery
+- Subject
+- Topic
+- Date
+- Start time
+- End time
+- Study session details
 
-After the study plan is generated and processed, the workflow uses Gmail to send the study-plan information to the user.
+### Google Sheets Tracking
 
-This creates an end-to-end automation flow from:
+The generated study plan is automatically stored in Google Sheets for easy tracking and reference.
 
-**Student Input → AI Plan → Calendar → Google Sheets → Email**
+### Email Confirmation
+
+After the plan is generated, the system automatically sends a confirmation email to the student.
+
+### Multi-Session Processing
+
+The workflow processes each study session individually using an n8n loop, allowing every session to be independently added to Google Calendar and recorded.
+
+### Structured AI Output
+
+The AI is instructed to return structured JSON containing:
+
+- Student information
+- Exam date
+- Subjects
+- Study sessions
+- Topics
+- Duration
+- Session type
+- Priority
+
+This makes the AI output reliable and usable by downstream automation nodes.
+
+### Error Handling
+
+The Google Sheets integration includes retry handling for temporary API failures such as HTTP 503 errors.
 
 ---
 
 # Workflow Architecture
 
-## Create Study Plan
-
 ```text
-                         User
+                ┌──────────────────────┐
+                │     Student Form     │
+                └──────────┬───────────┘
                            │
                            ▼
-                ┌────────────────────┐
-                │ Form — Study       │
-                │ Planner Input      │
-                └──────────┬─────────┘
+                ┌──────────────────────┐
+                │      Grok AI Agent   │
+                │                      │
+                │  Generate Study Plan │
+                └──────────┬───────────┘
                            │
                            ▼
-                ┌────────────────────┐
-                │      AI Agent       │
-                │      (Groq)         │
-                └──────────┬─────────┘
+                ┌──────────────────────┐
+                │    Parse Schedule    │
+                │   Structured JSON    │
+                └──────────┬───────────┘
                            │
                            ▼
-                ┌────────────────────┐
-                │ Code — Parse        │
-                │ Schedule            │
-                └──────────┬─────────┘
+                ┌──────────────────────┐
+                │   Loop Over Items    │
+                │ Process Each Session │
+                └──────────┬───────────┘
                            │
-                           ▼
-                ┌────────────────────┐
-                │ Split in Batches    │
-                │ One Session at Time │
-                └──────────┬─────────┘
-                           │
-                           ▼
-                ┌────────────────────┐
-                │ Google Calendar     │
-                │ Create Event        │
-                └──────────┬─────────┘
-                           │
-                           ▼
-                ┌────────────────────┐
-                │ Code — Build Sheet  │
-                │ Rows + Email        │
-                └──────────┬─────────┘
-                           │
-                           ▼
-                ┌────────────────────┐
-                │ Google Sheets       │
-                │ Log Study Plan      │
-                └──────────┬─────────┘
-                           │
-                           ▼
-                ┌────────────────────┐
-                │ Gmail               │
-                │ Send Confirmation   │
-                └────────────────────┘
+             ┌─────────────┼─────────────┐
+             │             │             │
+             ▼             ▼             ▼
+      ┌────────────┐ ┌────────────┐ ┌────────────┐
+      │   Google   │ │   Google   │ │   Gmail    │
+      │  Calendar  │ │   Sheets   │ │            │
+      └────────────┘ └────────────┘ └────────────┘
+
 ```
-
----
-
-# Workflow Breakdown
-
-### 1. Form — Study Planner Input
-
-The student submits their study requirements through an n8n form.
-
-Example inputs:
-
-```text
-Name: Karina
-Subject: Machine Learning
-Exam Date: 2026-08-30
-Study Hours/Day: 3
-Current Level: Beginner
-Weak Topics: Supervised Learning
-Study Preference: Theory + Practice
-```
-
----
-
-### 2. AI Agent
-
-The submitted information is passed to the AI Agent.
-
-The agent generates a personalized schedule based on:
-
-* Available preparation time
-* Exam deadline
-* Current level
-* Weak areas
-* Study preference
-* Required subject coverage
-
-The AI produces structured schedule information that can be processed by the next workflow stage.
-
----
-
-### 3. Parse Schedule
-
-The generated AI response is processed by a Code node.
-
-The parser:
-
-* Extracts the generated schedule
-* Converts the AI response into usable JSON
-* Validates the schedule structure
-* Prepares individual sessions for downstream processing
-
----
-
-### 4. Split in Batches
-
-The generated study plan contains multiple sessions.
-
-The workflow processes them **one session at a time**.
-
-This allows each session to be independently:
-
-* Scheduled in Google Calendar
-* Stored in Google Sheets
-* Associated with a Calendar Event ID
-
----
-
-### 5. Google Calendar
-
-Each study session is converted into a Google Calendar event.
-
-Example:
-
-```text
-Machine Learning — Supervised Learning
-16:30 – 19:00
-August 16, 2026
-```
-
-The resulting Calendar Event ID is captured for tracking.
-
----
-
-### 6. Build Sheet Rows + Email
-
-A Code node transforms the processed session and Calendar information into the format required by the downstream Google Sheets and Gmail nodes.
-
-This acts as a data transformation layer between the workflow components.
-
----
-
-### 7. Google Sheets
-
-The final study sessions are stored in Google Sheets.
-
-This provides persistent storage for the generated timetable and allows the user to easily view their schedule.
-
----
-
-### 8. Gmail
-
-The workflow sends the resulting study-plan information through Gmail, providing the student with an additional copy of their generated schedule.
-
----
-
-# Tech Stack
-
-### Workflow Automation
-
-* **n8n**
-
-### AI
-
-* **Groq**
-* Groq Chat Model
-* AI Agent
-* Prompt Engineering
-
-### Google Services
-
-* Google Sheets API
-* Google Calendar API
-* Gmail API
-* Google OAuth2
-
-### Data Processing
-
-* JavaScript
-* JSON
-* n8n Code Nodes
-* Data transformation
-* Batch processing
-
----
-
-# Authentication
-
-The workflow uses **Google OAuth2** to securely connect n8n with:
-
-* Google Sheets
-* Google Calendar
-* Gmail
-
-No separate frontend application or custom authentication system is required for the current workflow.
-
----
-
-# Current Workflow Capabilities
-
-## Implemented
-
-* AI-powered study-plan generation
-* n8n form-based user input
-* Groq-powered AI Agent
-* Personalized scheduling
-* Weak-topic prioritization
-* Structured schedule generation
-* JSON parsing
-* Session-by-session processing
-* Google Calendar event creation
-* Calendar Event ID tracking
-* Google Sheets study-session storage
-* Gmail integration
-* End-to-end workflow automation
-
----
-
-# Learning Outcomes
-
-This project demonstrates practical experience with:
-
-* AI Agents
-* Generative AI
-* Prompt Engineering
-* Workflow Automation
-* n8n
-* Groq API
-* Google APIs
-* OAuth2 Authentication
-* Google Sheets integration
-* Google Calendar integration
-* Gmail integration
-* JSON processing
-* Data transformation
-* Batch processing
-* API-based automation
-* AI-powered scheduling
-* Event creation and synchronization
-* Low-code AI application development
-
----
-
-# Contributing
-
-Contributions, suggestions, and feature requests are welcome.
-
-Feel free to fork this repository and submit a pull request.
-
----
-
-# License
-
-This project is licensed under the **MIT License**.
-
----
-
-# Author
-
-**Karina Pandav**
-
-Built as a practical project exploring **AI Agents, workflow automation, and intelligent productivity systems**.
-
-If you found this project useful, consider giving it a ⭐ on GitHub.
+### How It Works
+
+1. Student submits their requirements
+The student provides information such as:
+Name
+Exam date
+Subjects
+Available study hours
+Preferred study time
+
+2. AI Agent generates the plan
+The information is sent to the Grok AI model.
+The AI follows predefined study-planning rules such as:
+Calculating available study days
+Allocating new learning and revision
+Keeping sessions within available study hours
+Assigning specific topics
+Prioritizing important subjects
+Scheduling revision closer to the exam
+Reserving the final days for revision and quick practice
+
+3. Structured output is generated
+The AI returns the study plan in a structured JSON format.
+
+4. Schedule is parsed
+The structured response is processed by n8n and converted into individual study-session items.
+
+5. Sessions are processed individually
+The Loop Over Items node processes each study session separately.
+For every session, the workflow:
+
+Study Session
+      ↓
+Google Calendar
+      ↓
+Google Sheets
+      ↓
+Confirmation
+
+6. Google Calendar events are created
+Each session becomes an actionable calendar event.
+
+7. Study plan is stored
+The sessions are logged in Google Sheets so the student has a centralized record of their plan.
+
+8. Confirmation is sent
+The student receives an email confirming that their study plan has been generated.
+
+### Study Planning Logic
+
+The AI agent follows a predefined set of rules to create the schedule.
+
+Planning rules include:
+Calculate the exact number of available study days
+Distribute subjects fairly
+Prioritize important topics
+Allocate more revision closer to the exam
+Use new learning during the initial phase
+Use revision and practice during the later phase
+Keep individual sessions between 1.5 and 3 hours
+Respect the student's daily available study hours
+Assign specific topics instead of generic subject names
+Reserve the final two days for revision and quick practice
+
+This combines LLM-based reasoning with deterministic workflow automation.
+
+### Tech Stack
+Technology	Purpose
+n8n	Workflow automation and orchestration
+Grok	AI-powered study plan generation
+Google Calendar API	Creates study sessions
+Google Sheets API	Stores study plans
+Gmail	Sends confirmation emails
+Render	Cloud deployment
+
+### Deployment
+The n8n workflow is deployed on Render.
+
+Student
+   ↓
+Public n8n Form
+   ↓
+Render-hosted n8n
+   ↓
+Grok
+   ↓
+Google APIs
+Live Demo
+
+Try the AI Study Planner
+Note: The live demo runs on a free Render instance, so the service may take some time to wake up after a period of inactivity.
+
+Required Credentials
+To run the workflow, the following credentials are required:
+
+Grok / xAI
+xAI API key
+Google Cloud
+
+OAuth credentials for:
+Google Calendar
+Google Sheets
+Gmail
+
+These credentials should be stored securely in n8n and must never be committed to GitHub.
+
+### Setup
+1. Clone the repository
+git clone https://github.com/karinapandav/AI_Study_Planner_Agent.git
+cd AI_Study_Planner_Agent
+
+2. Set up n8n
+Run n8n locally or deploy it using a supported hosting provider.
+
+3. Import the workflow
+Import the provided n8n workflow into your n8n instance.
+
+4. Configure credentials
+Connect:
+Grok / xAI
+Google Calendar
+Google Sheets
+Gmail
+
+5. Configure the Google Sheet
+Create a spreadsheet for storing generated study sessions.
+
+Suggested columns:
+Plan ID
+Date
+Day
+Subject
+Topic
+Duration
+Start Time
+End Time
+Session Type
+Priority
+
+6. Configure Google Calendar
+Connect the Google Calendar account where study sessions should be created.
+
+7. Activate the workflow
+Publish/activate the workflow and use the production form URL.
+    
+### Why This Project?
+
+This project demonstrates how AI models can be combined with workflow automation and real-world APIs to create useful applications.
+Instead of simply generating text with an LLM, the AI output is converted into structured data and used to perform real actions:
+
+LLM
+ ↓
+Structured Data
+ ↓
+Automation
+ ↓
+External APIs
+ ↓
+Real-world Actions
+
+### What I Learned
+
+Building this project helped me gain practical experience with:
+
+AI agent workflows
+Prompt engineering
+Structured LLM output
+JSON parsing
+n8n workflow orchestration
+API integrations
+Google OAuth authentication
+Google Calendar automation
+Google Sheets automation
+Error handling and retries
+Cloud deployment
+Connecting AI outputs to real-world actions
+ 
+### Author
+
+### Karina Pandav ###
+
+B.Tech — Artificial Intelligence & Data Science
+
+⭐ If you found this project interesting
+
+Feel free to explore the workflow, try the live demo, or connect with me on GitHub.
